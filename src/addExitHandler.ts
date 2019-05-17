@@ -1,3 +1,5 @@
+process.setMaxListeners(40);
+
 /**
  * Add a handler for various types of process exits.
  * Errors from this handler will be captured and logged.

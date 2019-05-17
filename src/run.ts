@@ -141,8 +141,8 @@ async function clickAndWait(
   return Promise.all<any>([
     link!.click(),
     selector
-      ? page.waitForSelector(selector, { timeout: 5000 })
-      : page.waitForNavigation({ timeout: 5000 }) //, waitUntil: 'networkidle0' })
+      ? page.waitForSelector(selector, { timeout: 10000 })
+      : page.waitForNavigation({ timeout: 10000 }) //, waitUntil: 'networkidle0' })
   ])
     .then(() => true) // return true if it succeeds
     .catch(async () => {
@@ -164,8 +164,9 @@ async function acceptDisclaimer(page: puppeteer.Page, account: string): Promise<
     if (accept) {
       const clickResult = await clickAndWait(accept, page);
       if (page.url().includes('Disclaimer.aspx') || !clickResult) {
-        console.log(page.url());
-        throw new Error('Accept button did not navigate back to regular page');
+        throw new Error(
+          'Accept button did not navigate back to regular page; still on ' + page.url()
+        );
       }
       logger.info('Accepted disclaimer');
     } else {

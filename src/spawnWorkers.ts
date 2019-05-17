@@ -1,12 +1,13 @@
 import path from 'path';
+import os from 'os';
 import { spawn } from 'child-process-promise';
 import { outDir, createYearFiles } from './output';
 import { addExitHandler } from './addExitHandler';
 import { years, headers } from './constants';
 import { logger } from './logger';
 
-const processCount = 4;
-// const processCount = 15;
+// const processCount = 4;
+const processCount = 15;
 
 export async function spawnWorkers() {
   await createYearFiles(years, headers);
@@ -16,7 +17,10 @@ export async function spawnWorkers() {
     const args = [path.join(process.cwd(), 'lib/main.js'), '--outDir', outDir, '--i', String(i)];
     try {
       logger.info('Spawning: node ' + args.join(' '));
-      const spawnPromise = spawn('node', args, { stdio: 'inherit', detached: true });
+      const spawnPromise = spawn('node', args, {
+        stdio: 'inherit',
+        detached: os.platform() === 'darwin'
+      });
       addExitHandler(() => {
         console.log('Killing child processes for worker ' + i);
         // Kill this process and any children when the parent exits
