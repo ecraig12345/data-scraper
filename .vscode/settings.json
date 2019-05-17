@@ -3,6 +3,7 @@
   "files.trimTrailingWhitespace": true,
   // Controls whether the editor should render whitespace characters
   "editor.renderWhitespace": "all",
+  "editor.formatOnSave": true,
   "files.exclude": {
     "**/.git": true,
     "**/.DS_Store": true,
