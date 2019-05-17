@@ -40,3 +40,17 @@ export const tabList = [
 ];
 /** All the years we have data for */
 export const years = tabList.slice(tabList.indexOf('2018'));
+
+/** Short account list for testing */
+export const accounts = [
+  'R0153887',
+  'R0022194',
+  'R0090848',
+  'R0033450',
+  'R0033596',
+  'R0033792',
+  'R0095456',
+  'R0032229',
+  'R0068166',
+  'R0166185'
+];

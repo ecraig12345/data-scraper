@@ -3,6 +3,7 @@ import path from 'path';
 import { createLogger, format, transports } from 'winston';
 import { ensureOutputDir, outDir } from './output';
 import { args } from './args';
+import { LockingStreamTransport } from './LockingWriteStream';
 
 ensureOutputDir();
 const processNum = args.i;
@@ -31,16 +32,17 @@ const defaultFormat = format.combine(
 );
 
 export const logger = createLogger({
-  format: defaultFormat,
   transports: [
     // One log file with just warnings/errors for readability
-    new transports.File({
-      filename: path.join(outDir, `errors${processNum}.log`),
+    new LockingStreamTransport({
+      filename: path.join(outDir, 'errors.log'),
+      format: defaultFormat,
       level: 'warn'
     }),
     // Another with info/warnings/errors
-    new transports.File({
-      filename: path.join(outDir, `info${processNum}.log`),
+    new LockingStreamTransport({
+      filename: path.join(outDir, 'info.log'),
+      format: defaultFormat,
       level: 'info'
     }),
     // Write all log entries to the console. The idea is that once the operation finishes, we

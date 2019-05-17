@@ -1,12 +1,1 @@
-# data
-
-data is a package created and managed with the `create-just` utility.
-
-## Next Steps
-
-Now that you have created this repository, go ahead and run the following to get started:
-
-```sh
-npm install
-npm start
-```
+Data scraping code for retrieving property information from the Cleveland County (Oklahoma) Assessor's website.

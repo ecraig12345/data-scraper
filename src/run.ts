@@ -1,36 +1,39 @@
 import fs from 'fs-extra';
-import os from 'os';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import { logger } from './logger';
 import { createYearStreams, writeRow, closeStreams } from './output';
 import { years, headers, assessorURL, tabList, IRecord, selectors } from './constants';
-
-// Real account list
-const rawAccounts = fs.readFileSync(path.join(process.cwd(), 'data/normanAccounts.csv')).toString();
-const accounts = rawAccounts.trim().split(/\r?\n/);
-
-const threadCount = os.cpus().length;
-const accountsByThread: string[][] = [];
-const accountsPerThread = Math.ceil(accounts.length / threadCount);
-for (let i = 0; i < threadCount; i++) {
-  const start = accountsPerThread * i;
-  accountsByThread[i] = accounts.slice(start, start + accountsPerThread);
-}
-
-// Short account list for testing
-// prettier-ignore
-// const accounts = ['R0153887', 'R0022194', 'R0090848', 'R0033450', 'R0033596', 'R0033792', 'R0095456', 'R0032229', 'R0068166', 'R0166185'];
-
-// Make a write stream for each year's CSV file.
-// A write stream incrementally writes data to a file. We use write streams so there will still
-// be some data even if the program crashes, and to keep the program from running out of memory.
-const yearStreams = createYearStreams(years, headers);
+import { args } from './args';
+import { addExitHandler } from './addExitHandler';
 
 /** Will be set to true if the last navigation request was redirected */
 let wasRedirected = false;
 
-async function run(): Promise<void> {
+export async function run() {
+  try {
+    await reallyRun();
+  } catch (ex) {
+    if (ex.message.includes('Session closed')) {
+      logger.warn(ex.message);
+    } else {
+      logger.warn(`Unhandled error running worker ${args.i}: `, ex);
+    }
+  }
+}
+
+async function reallyRun() {
+  // Real account list
+  const rawAccounts = fs
+    .readFileSync(path.join(process.cwd(), `data/normanAccounts${args.i}.csv`))
+    .toString();
+  const accounts = rawAccounts.trim().split(/\r?\n/);
+
+  // Make a write stream for each year's CSV file.
+  // A write stream incrementally writes data to a file. We use write streams so there will still
+  // be some data even if the program crashes, and to keep the program from running out of memory.
+  const yearStreams = createYearStreams(years);
+
   // Launch browser
   const browser = await puppeteer.launch({
     // Set headless to false to see what the browser is doing
@@ -43,14 +46,17 @@ async function run(): Promise<void> {
     //     ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     //     : 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
   });
+  addExitHandler(() => {
+    browser.close();
+  });
+
   const page = await browser.newPage();
 
   // Accept the disclaimer
-  await acceptDisclaimer(page);
+  await acceptDisclaimer(page, accounts[0]);
 
   // Set up redirect handling *after* the redirect to the disclaimer
   await handleRedirects(page);
-  logger.warn('First account: ' + accounts[0]);
 
   for (const account of accounts) {
     logger.info('Processing account ' + account);
@@ -90,7 +96,7 @@ async function run(): Promise<void> {
 
       // Pull data from the page to make the record and write it to the file
       const record = await getRecord(page, account, year);
-      writeRow(yearStreams[year], record);
+      await writeRow(yearStreams[year], record);
     } // end years loop
   } // end accounts loop
 
@@ -149,14 +155,16 @@ async function clickAndWait(
 }
 
 /** Try to go to the first account's page, then accept the disclaimer */
-async function acceptDisclaimer(page: puppeteer.Page): Promise<void> {
-  await page.goto(assessorURL + accounts[0]);
+async function acceptDisclaimer(page: puppeteer.Page, account: string): Promise<void> {
+  logger.info('Accepting disclaimer using account ' + account);
+  await page.goto(assessorURL + account);
 
   if (page.url().includes('Disclaimer.aspx')) {
     const accept = await page.$('input[name*="btnDisclaimerAccept"]');
     if (accept) {
       const clickResult = await clickAndWait(accept, page);
       if (page.url().includes('Disclaimer.aspx') || !clickResult) {
+        console.log(page.url());
         throw new Error('Accept button did not navigate back to regular page');
       }
       logger.info('Accepted disclaimer');
@@ -228,11 +236,3 @@ async function getRecord(page: puppeteer.Page, account: string, year: string): P
   // Make sure the returned record is in the right order
   return headers.map((header: keyof IRecord) => String(record[header]));
 }
-
-run()
-  .catch((error: any) => {
-    logger.error('Uncaught error: ', error);
-  })
-  .then(() => {
-    process.exit(0);
-  });
