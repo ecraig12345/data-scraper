@@ -3,28 +3,24 @@ import path from 'path';
 import { createArrayCsvStringifier } from 'csv-writer';
 import { args } from './args';
 import { LockingWriteStream } from './LockingWriteStream';
+import { HEADERS } from './constants';
 
 // Use the csv-writer library to ensure that CSV values are escaped properly
 const csvStringifier = createArrayCsvStringifier({});
 
-export const outDir = args.outDir || path.join('output', Date.now().toString());
+export const outDir = args().outDir || path.join('output', Date.now().toString());
 
 export function ensureOutputDir() {
   fs.mkdirpSync(outDir);
 }
 
-function getYearFilename(year: string): string {
-  return path.join(outDir, year + '.csv');
-}
-
 /**
  * Create files for each year's CSV data, and write the header row to each.
  * @param years Years to create streams/files for
- * @param headers Headers to write to each file
  */
-export function createYearFiles(years: string[], headers: string[]) {
+export function createYearFiles(years: string[]) {
   ensureOutputDir();
-  const headerCsv = csvStringifier.stringifyRecords([headers]);
+  const headerCsv = csvStringifier.stringifyRecords([HEADERS]);
   for (const year of years) {
     // This could throw, but allow it to go uncaught since this is the beginning of the program
     // and any error here should be considered fatal.
@@ -44,13 +40,22 @@ export function createYearStreams(years: string[]): { [year: string]: LockingWri
   return yearStreams;
 }
 
-/** Write a row to the CSV stream, locking the file */
-export async function writeRow(stream: LockingWriteStream, row: string[]) {
-  await stream.write(csvStringifier.stringifyRecords([row]));
+/** Write a row to the CSV stream, locking the file. Returns true on success. */
+export async function writeRow(stream: LockingWriteStream, row: string[]): Promise<boolean> {
+  try {
+    await stream.write(csvStringifier.stringifyRecords([row]));
+    return true;
+  } catch (ex) {
+    return false;
+  }
 }
 
 export function closeStreams(streams: { [key: string]: LockingWriteStream }): void {
   for (const stream of Object.values(streams)) {
     stream.end();
   }
+}
+
+function getYearFilename(year: string): string {
+  return path.join(outDir, year + '.csv');
 }

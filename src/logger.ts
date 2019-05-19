@@ -6,7 +6,7 @@ import { args } from './args';
 import { LockingStreamTransport } from './LockingWriteStream';
 
 ensureOutputDir();
-const processNum = args.i;
+const processNum = args().i;
 
 // Docs: https://github.com/winstonjs/logform
 const defaultFormat = format.combine(

@@ -9,7 +9,6 @@
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
     "forceConsistentCasingInFileNames": true,
     "pretty": true,
     "moduleResolution": "node",

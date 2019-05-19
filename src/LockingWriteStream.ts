@@ -1,5 +1,6 @@
 import fs from 'fs';
 import os from 'os';
+import delay from 'delay';
 import lockfile from 'proper-lockfile';
 import { MESSAGE } from 'triple-beam';
 import TransportStream from 'winston-transport';
@@ -19,46 +20,48 @@ export class LockingWriteStream {
 
   public async write(
     chunk: any,
-    callback?: (error: Error | null | undefined) => void
+    callback?: (error?: Error | null | undefined) => void
   ): Promise<void> {
     let release: (() => Promise<void>) | undefined;
     let lastError: Error | undefined;
     let start = Date.now();
-    while (!release && Date.now() - start < 1000) {
+    while (!release && Date.now() - start < 2000) {
       try {
         release = await lockfile.lock(this._path);
       } catch (ex) {
         lastError = ex;
+        // wait before trying again
+        await delay(50);
       }
     }
 
-    if (!release) {
-      const errorMsg = `Could not acquire lock for ${this._path} after 1 second`;
-      logger.error(errorMsg);
-      logger.error('Last error: ', lastError);
+    if (release) {
+      try {
+        await new Promise(resolve => {
+          try {
+            this._stream.write(chunk, (error: Error | null | undefined) => {
+              error && this._logError(error, chunk);
+              release!();
+              resolve();
+              callback && (error ? callback(error) : callback());
+            });
+          } catch (ex) {
+            this._logError(ex, chunk);
+            release!();
+            resolve();
+            callback && callback(ex);
+          }
+        });
+      } catch (err) {
+        logger.error(`Error acquiring lock for ${this._path} `, err);
+        callback && callback(err);
+      }
+    } else {
+      const errorMsg = `Could not acquire lock for ${this._path} after 2 seconds`;
+      logger.error(errorMsg + '. Last error: ', lastError);
       callback && callback(new Error(errorMsg));
     }
 
-    try {
-      await new Promise(resolve => {
-        try {
-          this._stream.write(chunk, (error: Error | null | undefined) => {
-            error && this._logError(error, chunk);
-            release!();
-            resolve();
-            callback && callback(error);
-          });
-        } catch (ex) {
-          this._logError(ex, chunk);
-          release!();
-          resolve();
-          callback && callback(ex);
-        }
-      });
-    } catch (err) {
-      logger.error(`Error acquiring lock for ${this._path} `, err);
-      callback && callback(err);
-    }
     return undefined;
   }
 

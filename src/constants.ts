@@ -1,3 +1,5 @@
+import puppeteer from 'puppeteer';
+
 export interface IRecord {
   ACCOUNTNO: string;
   /** the Account Type element of the legal tables for Base and the prior year pages */
@@ -12,7 +14,7 @@ export interface IRecord {
   TotalAsses: string;
 }
 
-export const headers: (keyof IRecord)[] = [
+export const HEADERS: (keyof IRecord)[] = [
   'ACCOUNTNO',
   'AccountTyp',
   'TotalLandV',
@@ -22,7 +24,7 @@ export const headers: (keyof IRecord)[] = [
 ];
 
 /** CSS selectors for getting the data for each cell */
-export const selectors: { [K in keyof IRecord]?: string } = {
+export const SELECTORS: { [K in keyof IRecord]?: string } = {
   // *= in a CSS attribute selector means check if the attribute contains the given value
   AccountTyp: '[id*="AccountTypeLabel"]',
   TotalLandV: '[id*="LandValueLabel"]',
@@ -30,19 +32,19 @@ export const selectors: { [K in keyof IRecord]?: string } = {
   TotalAsses: '[id*="GrossAssessedValueLabel"]'
 };
 
-export const assessorURL = 'http://www.clevelandcountyassessor.us/Data.aspx?Account=';
+export const ASSESSOR_URL = 'http://www.clevelandcountyassessor.us/Data.aspx?Account=';
 
 /** Tabs/links at the top of each account page */
 // prettier-ignore
-export const tabList = [
+export const TAB_LIST = [
   'Base', 'Land', 'Valuation', 'Tax', 'Sales', 'Sketch', 'Improvements', '2018', '2017', '2016',
   '2015', '2014', '2013', '2012', '2011', '2010', '2009', '2008', '2007', '2006', '2005', '2004'
 ];
 /** All the years we have data for */
-export const years = tabList.slice(tabList.indexOf('2018'));
+export const YEARS = TAB_LIST.slice(TAB_LIST.indexOf('2018'));
 
 /** Short account list for testing */
-export const accounts = [
+export const TEST_ACCOUNTS = [
   'R0153887',
   'R0022194',
   'R0090848',
@@ -54,3 +56,11 @@ export const accounts = [
   'R0068166',
   'R0166185'
 ];
+
+export const NAV_OPTIONS: puppeteer.NavigationOptions = {
+  // We can get data off the page as soon as initial rendering is finished (no need to wait for
+  // all images/other resources to be loaded). Note that this would not work on a more modern page
+  // where rendering is done in the browser using JS.
+  // https://github.com/GoogleChrome/puppeteer/blob/v1.15.0/docs/api.md#pagewaitfornavigationoptions
+  waitUntil: 'domcontentloaded'
+};
