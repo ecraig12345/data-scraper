@@ -41,7 +41,8 @@ export const TAB_LIST = [
   '2015', '2014', '2013', '2012', '2011', '2010', '2009', '2008', '2007', '2006', '2005', '2004'
 ];
 /** All the years we have data for */
-export const YEARS = TAB_LIST.slice(TAB_LIST.indexOf('2018'));
+export const YEARS = TAB_LIST.slice(TAB_LIST.indexOf('2015'));
+// export const YEARS = TAB_LIST.slice(TAB_LIST.indexOf('2018'));
 
 /** Short account list for testing */
 export const TEST_ACCOUNTS = [
@@ -64,3 +65,6 @@ export const NAV_OPTIONS: puppeteer.NavigationOptions = {
   // https://github.com/GoogleChrome/puppeteer/blob/v1.15.0/docs/api.md#pagewaitfornavigationoptions
   waitUntil: 'domcontentloaded'
 };
+
+export const RETRIES = 4;
+export const TIMEOUT = 15000;

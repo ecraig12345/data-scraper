@@ -3,7 +3,15 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import { args } from './args';
 import { clickAndWait } from './clickAndWait';
-import { YEARS, ASSESSOR_URL, TAB_LIST, SELECTORS, NAV_OPTIONS } from './constants';
+import {
+  YEARS,
+  ASSESSOR_URL,
+  TAB_LIST,
+  SELECTORS,
+  NAV_OPTIONS,
+  TIMEOUT,
+  RETRIES
+} from './constants';
 import { getRecord } from './getRecord';
 import { LockingWriteStream } from './LockingWriteStream';
 import { logger } from './logger';
@@ -26,7 +34,7 @@ export async function run() {
 
   // Make a new page, set the load timeout, and set up redirect handling
   const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(10000);
+  page.setDefaultNavigationTimeout(TIMEOUT);
 
   for (const account of accounts) {
     logger.info('Processing account ' + account);
@@ -50,12 +58,23 @@ export async function run() {
 }
 
 async function goWithRetries(page: puppeteer.Page, url: string): Promise<boolean> {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < RETRIES; i++) {
+    if (i > 0) {
+      // If this is a retry, reload the page first
+      logger.warn('Reloading page for retry #' + i);
+      try {
+        await page.reload(NAV_OPTIONS);
+      } catch (ex) {
+        logger.warn('Error reloading page: ' + ex.message);
+        continue;
+      }
+    }
+
     try {
       await page.goto(url, NAV_OPTIONS);
       return true;
     } catch (ex) {
-      await page.reload(NAV_OPTIONS);
+      // ignore for now
     }
   }
   return false;

@@ -10,8 +10,7 @@ import { YEARS, ASSESSOR_URL, TEST_ACCOUNTS } from './constants';
 import { logger } from './logger';
 import { outDir, createYearFiles } from './output';
 
-// const PROCESS_COUNT = 2;
-const PROCESS_COUNT = 15;
+const PROCESS_COUNT = 8;
 
 export async function spawnWorkers() {
   // Start the file for each year
@@ -88,7 +87,7 @@ async function launchWorker(browser: puppeteer.Browser, i: number) {
   try {
     // Wait before starting to offset the processes a bit
     if (i > 0) {
-      await delay(250);
+      await delay(1000);
     }
 
     logger.info('Spawning: node ' + nodeArgs.join(' '));

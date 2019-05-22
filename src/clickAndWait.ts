@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import { logger } from './logger';
-import { NAV_OPTIONS } from './constants';
+import { NAV_OPTIONS, RETRIES } from './constants';
 
 /**
  * Wait for a link/button to appear on the page, click it, and wait for navigation to finish.
@@ -8,8 +8,8 @@ import { NAV_OPTIONS } from './constants';
  * page might not be there yet.
  */
 export async function clickAndWait(linkSelector: string, page: puppeteer.Page): Promise<boolean> {
-  // Try up to 3 times to load the page and click the link
-  for (let i = 0; i < 3; i++) {
+  // Try multiple times to load the page and click the link
+  for (let i = 0; i < RETRIES; i++) {
     if (i > 0) {
       // If this is a retry, reload the page first
       logger.warn('Reloading page for retry #' + i);

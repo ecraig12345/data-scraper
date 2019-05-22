@@ -7,7 +7,7 @@ async function main(): Promise<any> {
   if (args().i) {
     // This is a worker thread--run data collection
     try {
-      return run();
+      await run();
     } catch (ex) {
       if (ex.message.includes('Session closed')) {
         logger.warn(ex.message);
@@ -18,7 +18,7 @@ async function main(): Promise<any> {
   } else {
     // This is the main thread--spawn the workers
     try {
-      return spawnWorkers();
+      await spawnWorkers();
     } catch (ex) {
       logger.error('Uncaught error in main thread');
       logger.error('', ex);
@@ -26,4 +26,6 @@ async function main(): Promise<any> {
   }
 }
 
-main().then(() => process.exit(0));
+main()
+  .catch(() => undefined)
+  .then(() => process.exit(0));
