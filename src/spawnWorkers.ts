@@ -2,15 +2,14 @@ import os from 'os';
 import path from 'path';
 import { spawn } from 'child-process-promise';
 import delay from 'delay';
-import fkill from 'fkill';
 import puppeteer from 'puppeteer';
 import { addExitHandler } from './addExitHandler';
 import { clickAndWait } from './clickAndWait';
 import { YEARS, ASSESSOR_URL, TEST_ACCOUNTS } from './constants';
 import { logger } from './logger';
-import { outDir, createYearFiles } from './output';
+import { createYearFiles } from './output';
 
-const PROCESS_COUNT = 8;
+const PROCESS_COUNT = 12;
 
 export async function spawnWorkers() {
   // Start the file for each year
@@ -43,11 +42,6 @@ export async function spawnWorkers() {
   addExitHandler(async () => {
     console.log('Closing browser');
     await browser.close();
-
-    // Kill any running Chromium instances
-    // TODO: will this work?
-    console.log("Very insistently closing browser to be sure it's gone");
-    await fkill(['chromium', 'chromium helper'], { ignoreCase: true });
   });
 
   return Promise.all(promises).then(() => {
@@ -77,8 +71,8 @@ async function launchWorker(browser: puppeteer.Browser, i: number) {
   // arg definitions are in args.ts
   const nodeArgs = [
     path.join(process.cwd(), 'lib/main.js'),
-    '--outDir',
-    outDir,
+    // '--outDir',
+    // outDir,
     '--i',
     String(i),
     '--wsEndpoint',

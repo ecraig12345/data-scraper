@@ -31,7 +31,7 @@ export class LockingWriteStream {
       } catch (ex) {
         lastError = ex;
         // wait before trying again
-        await delay(50);
+        await delay(25);
       }
     }
 
@@ -92,6 +92,6 @@ export class LockingStreamTransport extends TransportStream {
   }
 
   public log(info: any, callback?: () => void) {
-    this._stream.write(`${info[MESSAGE]}${os.EOL}`, callback).catch(() => undefined);
+    this._stream.write(info[MESSAGE] + os.EOL, callback).catch(() => undefined);
   }
 }

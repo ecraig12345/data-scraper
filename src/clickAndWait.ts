@@ -36,7 +36,7 @@ export async function clickAndWait(linkSelector: string, page: puppeteer.Page): 
         logger.warn('Could not find element to click');
       }
     } catch (ex) {
-      logger.warn('Timeout or other error attempting to find and click link');
+      logger.warn('Timeout or other error attempting to find and click link: ' + ex.message);
     }
   }
 

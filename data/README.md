@@ -27,3 +27,11 @@ Example: http://www.clevelandcountyassessor.us/Data.aspx?Account=M0094747
 Various fields missing from data. These properties are excluded from analysis.
 
 Example: http://www.clevelandcountyassessor.us/Data.aspx?Account=R0101470
+
+#### Land value > taxable value
+
+For some properties, everything except the land value is 0. For others, all the values are defined, but the taxable value is less than the land value.
+
+Example of mostly-0 values (2014--other years are normal): http://www.clevelandcountyassessor.us/Data.aspx?Account=R0050599
+
+Example of taxable value less than land value (2014): http://www.clevelandcountyassessor.us/Data.aspx?Account=R0052047

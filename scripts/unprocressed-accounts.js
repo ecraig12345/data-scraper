@@ -7,11 +7,15 @@ const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 
-const CHUNKS = 8;
+const CHUNKS = 12;
 
 const resultDirs = [
   path.join(process.cwd(), 'output', 'try2a'),
-  path.join(process.cwd(), 'output', 'try2b')
+  path.join(process.cwd(), 'output', 'try2b'),
+  path.join(process.cwd(), 'output', 'try2c'),
+  path.join(process.cwd(), 'output', 'try2d'),
+  path.join(process.cwd(), 'output', 'try2e'),
+  path.join(process.cwd(), 'output', 'try2f')
 ];
 const dataDir = path.join(process.cwd(), 'data');
 
@@ -21,11 +25,12 @@ const allAccounts = fs
   .split(/\r?\n/g);
 
 const processedAccounts = new Set();
+const exemptReal = new Set();
 
 for (const resultDir of resultDirs) {
   const files = fs.readdirSync(resultDir);
   for (const file of files) {
-    if (!file.endsWith('.csv')) {
+    if (!file.endsWith('.csv') && file !== 'info.log') {
       continue;
     }
 
@@ -35,15 +40,28 @@ for (const resultDir of resultDirs) {
       .split(/\r?\n/g);
     lines.shift(); // remove header
     for (const line of lines) {
-      const accountMatch = line.match(/^[^,]*/);
-      if (accountMatch) {
-        processedAccounts.add(accountMatch[0]);
+      if (file === 'info.log') {
+        const exemptRealMatch = line.match(
+          /Account (\w+) \(\d+\): skipping account of type "EXEMPT REAL"/
+        );
+        if (exemptRealMatch) {
+          processedAccounts.add(exemptRealMatch[1]);
+          exemptReal.add(exemptRealMatch[1]);
+        }
+      } else {
+        const accountMatch = line.match(/^[^,]*/);
+        if (accountMatch) {
+          processedAccounts.add(accountMatch[0]);
+        }
       }
     }
   }
 }
 
 const unprocessedAccounts = allAccounts.filter(a => !processedAccounts.has(a));
+
+console.log('Unprocessed: ' + unprocessedAccounts.length);
+console.log('Exempt real: ' + exemptReal.size);
 
 const chunkSize = Math.ceil(unprocessedAccounts.length / CHUNKS);
 for (let i = 0; i < CHUNKS; i++) {

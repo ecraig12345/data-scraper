@@ -18,7 +18,6 @@ import { logger } from './logger';
 import { createYearStreams, writeRow, closeStreams } from './output';
 
 export async function run() {
-  // Real account list
   const rawAccounts = fs
     .readFileSync(path.join(process.cwd(), `data/normanAccounts${args().i}.csv`))
     .toString();
@@ -91,7 +90,7 @@ async function processYear(
   const index = TAB_LIST.indexOf(year);
   const clickResult = await clickAndWait(`#ContentPlaceHolder1_mnuDatan${index} a`, page);
   if (!clickResult) {
-    logger.warn(`Account ${account}: Couldn't load page for ${year}`);
+    logger.error(`Account ${account}: Couldn't load page for ${year}`);
     return;
   }
 
@@ -108,7 +107,7 @@ async function processYear(
       const record = await getRecord(page, account, year);
       if (record) {
         if (!(await writeRow(stream, record))) {
-          logger.warn(`Account ${account} (${year}): error writing data`);
+          logger.error(`Account ${account} (${year}): error writing data`);
         }
       }
     }

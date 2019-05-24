@@ -64,7 +64,9 @@ export async function getRecord(
 
   // Calculate the TotalBuild value if possible
   if (record.TotalLandV && record.TotalValue) {
-    record.TotalBuild = (Number(record.TotalValue) - Number(record.TotalLandV)).toFixed(2);
+    // If TotalValue is 0 for some reason, don't let TotalBuild end up negative
+    // prettier-ignore
+    record.TotalBuild = Math.max(0, Number(record.TotalValue) - Number(record.TotalLandV)).toFixed(2);
   }
 
   // Make sure the returned record is in the right order

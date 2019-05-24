@@ -1,14 +1,14 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { createArrayCsvStringifier } from 'csv-writer';
-import { args } from './args';
 import { LockingWriteStream } from './LockingWriteStream';
 import { HEADERS } from './constants';
 
 // Use the csv-writer library to ensure that CSV values are escaped properly
 const csvStringifier = createArrayCsvStringifier({});
 
-export const outDir = args().outDir || path.join('output', Date.now().toString());
+// export const outDir = args().outDir || path.join('output', Date.now().toString());
+export const outDir = path.join(process.cwd(), 'output');
 
 export function ensureOutputDir() {
   fs.mkdirpSync(outDir);
@@ -22,9 +22,11 @@ export function createYearFiles(years: string[]) {
   ensureOutputDir();
   const headerCsv = csvStringifier.stringifyRecords([HEADERS]);
   for (const year of years) {
-    // This could throw, but allow it to go uncaught since this is the beginning of the program
-    // and any error here should be considered fatal.
-    fs.writeFileSync(getYearFilename(year), headerCsv, { encoding: 'utf8' });
+    if (!fs.existsSync(getYearFilename(year))) {
+      // This could throw, but allow it to go uncaught since this is the beginning of the program
+      // and any error here should be considered fatal.
+      fs.writeFileSync(getYearFilename(year), headerCsv, { encoding: 'utf8' });
+    }
   }
 }
 

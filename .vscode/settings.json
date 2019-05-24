@@ -18,5 +18,6 @@
     "**/lib-esm": true,
     "**/lib-es2015": true,
     "**/dist": true
-  }
+  },
+  "editor.tabSize": 2
 }
