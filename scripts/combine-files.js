@@ -15,8 +15,6 @@ const files = [
 // Create a stream for each combined file
 /** @type {{[filename: string]: fs.WriteStream}} */
 const outStreams = {};
-// /** @type {{[year: string]: Set<string>}} */
-// const accountsByYear = {};
 for (const file of files) {
   const hasFile = fs.existsSync(path.join(outputRoot, file));
   outStreams[file] = fs.createWriteStream(path.join(outputRoot, file), { flags: 'a+' });
@@ -30,11 +28,6 @@ for (const file of files) {
     }
   }
 }
-
-// /** @type {{[account: string]: string[]}} */
-// const missingData = {};
-// /** @type {string[]} */
-// const incompleteAccounts = [];
 
 for (const resultDir of resultDirs) {
   const fullResultDir = path.join(outputRoot, resultDir);
@@ -57,14 +50,6 @@ for (const resultDir of resultDirs) {
         // On some lines, TotalBuild accidentally ended up negative. Replace that with 0.
         outStreams[file].write(line.replace(/^((?:[^,]+,){4})-([\d.]+)/, '$10.00') + os.EOL);
       }
-      // const year = file.replace('.csv', '');
-
-      // for (const line of lines) {
-      //   const accountMatch = line.match(/^[^,]*/);
-      //   if (accountMatch) {
-      //     accountsByYear[year].add(accountMatch[0]);
-      //   }
-      // }
     } else if (file === 'errors.log') {
       for (let line of lines) {
         if (
@@ -84,15 +69,6 @@ for (const resultDir of resultDirs) {
           line = line.replace('[warn]', '[error]');
         }
         outStreams[file].write(line + os.EOL);
-
-        // const match = line.match(/Account (\w+): Couldn't load page for (\d+)/);
-        // if (match) {
-        //   const [, account, year] = match;
-        //   if (!missingData[account]) {
-        //     missingData[account] = [];
-        //   }
-        //   missingData[account].push(year);
-        // }
       }
     }
   }
